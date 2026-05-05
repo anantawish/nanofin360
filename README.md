@@ -1,37 +1,68 @@
 # NanoFin360
 Efficient Financial and Business Management System (PHP + MySQL) for multi-branch operations.
 
-## Project Summary
-NanoFin360 is a streamlined finance and leasing platform built with a simple OOP structure.
-It focuses on practical workflows, maintainability, and branch-level operations.
+## Overview
+NanoFin360 is a modular finance/leasing platform built with pragmatic PHP + MySQL architecture.
+It is designed for branch operations, maker-checker workflows, and operational reporting.
+
+## Key Modules
+- Customer 360 + KYC
+- Credit Scoring
+- Affordability / DTI
+- Hire Purchase
+- Installments
+- Collections, NPL, Legal, Portfolio, Compliance, BI, LEI
 
 ## Tech Stack
 - PHP
 - MySQL
 - Bootstrap + jQuery
 
-## Quick Start
-1. Clone this repository into your web root.
-2. Import database schema only:
+## Prerequisites
+- PHP 8.1+ (XAMPP is supported)
+- MySQL 8+ or MariaDB compatible version
+- Apache/Nginx web server
+
+## Installation (Clean Setup)
+1. Clone repository into your web root.
+2. Create database (example: `nanfinance`).
+3. Import schema only (no user data included):
    - `database/schema.sql`
-3. Configure environment variables using:
-   - `.env.example`
-4. Start Apache and MySQL, then open the application in your browser.
+4. Configure environment variables (recommended):
+   - `NANFIN_DB_HOST`
+   - `NANFIN_DB_PORT`
+   - `NANFIN_DB_NAME`
+   - `NANFIN_DB_USER`
+   - `NANFIN_DB_PASS`
+   - `SF360_DEPLOY_KEY` (optional, for `_deploy/deploy_sync.php`)
+5. Start Apache + MySQL and open the app.
 
-## Security and Safe Publishing Notes
-- Database credentials are read from environment variables (`NANFIN_DB_*`).
-- Deploy key is read from environment variable (`SF360_DEPLOY_KEY`).
-- No real user dump is included in this repository.
-- Runtime and local sensitive files are ignored by `.gitignore`, including:
-  - `keys/*.json`
-  - `statment-ocr/keys/*.json`
-  - `nanofin_users.sqlite`
-  - backup and deploy artifacts
+## Local URL (XAMPP example)
+- `http://localhost:888/EngNano360/`
 
-## Useful Scripts
-- Schema-only dump helper: `ops_dump_schema_nodata.ps1`
+## Security Notes
+- This repository is sanitized for public sharing.
+- Real credential files are ignored via `.gitignore`.
+- No production database dump is included.
+- Only schema is shipped (`database/schema.sql`).
+
+Ignored sensitive paths include:
+- `keys/*.json`
+- `statment-ocr/keys/*.json`
+- `*.sqlite`
+- backup/deploy artifacts and temporary files
+
+## Utility Scripts
+- Schema-only export helper: `ops_dump_schema_nodata.ps1`
 - UTF-8 safety check: `utf8_guard.php`
 
-## License and Terms
-Custom Proprietary License.
-Use within one organization (up to 150 concurrent users), modification allowed for internal use, and commercial resale/sub-licensing is prohibited.
+## Contribution and Publishing Rules
+Before pushing to a public repo:
+1. Run UTF-8 and secret checks.
+2. Confirm no customer/user dump is staged.
+3. Keep credentials in environment variables only.
+
+## License
+Custom Proprietary License (see `LICENSE`).
+Internal use and modification are allowed.
+Commercial resale/sub-licensing is prohibited.
