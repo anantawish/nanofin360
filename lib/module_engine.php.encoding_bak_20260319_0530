@@ -1,0 +1,798 @@
+<?php
+declare(strict_types=1);
+
+function handle_module_request(string $moduleKey): array
+{
+    $module = module_by_key($moduleKey);
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['module_key'] ?? '') === $moduleKey) {
+        try {
+            verify_csrf_or_fail((string)($_POST['csrf_token'] ?? ''));
+            $action = (string)($_POST['action'] ?? 'create');
+            $reason = trim((string)($_POST['reason'] ?? ''));
+
+            if ($action === 'create') {
+                module_create_record($module, $_POST, $reason);
+                add_flash('success', 'เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธโ€“เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ขเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธย');
+            } elseif ($action === 'update') {
+                module_update_record($module, $_POST, $reason);
+                add_flash('success', 'เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ขเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธย');
+            } elseif ($action === 'approve') {
+                module_approve_record($module, $_POST, $reason);
+                add_flash('success', 'เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ขเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธย');
+            } elseif ($action === 'delete') {
+                module_delete_record($module, $_POST, $reason);
+                add_flash('warning', 'เน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ขเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธย เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขย');
+            } else {
+                throw new RuntimeException('เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธโ€ขเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€');
+            }
+        } catch (Throwable $e) {
+            add_flash('danger', 'เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธโ€“เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขย: ' . $e->getMessage());
+        }
+
+        $target = strtok((string)($_SERVER['REQUEST_URI'] ?? ''), '?');
+        redirect_to($target ?: '/index.php');
+    }
+
+    $editRecord = null;
+    if (!empty($_GET['edit'])) {
+        $editRecord = module_find_latest_by_id($moduleKey, (int)$_GET['edit']);
+        if ($editRecord === null) {
+            add_flash('danger', 'เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขย');
+        }
+    }
+
+    $searchTerm = trim((string)($_GET['q'] ?? ''));
+    if (mb_strlen($searchTerm) > 120) {
+        $searchTerm = mb_substr($searchTerm, 0, 120);
+    }
+
+    return [
+        'module' => $module,
+        'rows' => module_list_latest($moduleKey, $searchTerm),
+        'summary' => module_summary($moduleKey),
+        'edit' => $editRecord,
+        'search_term' => $searchTerm,
+    ];
+}
+
+function module_create_record(array $module, array $input, string $reason = ''): void
+{
+    $payload = validate_and_normalize_payload($module, $input);
+    $common = normalize_common_payload($input);
+    $recordUid = sprintf('%s-%s-%04d', $module['code'], date('YmdHis'), random_int(1000, 9999));
+
+    module_persist_new_version(
+        $module['key'],
+        $recordUid,
+        1,
+        $payload,
+        $common,
+        'CREATE',
+        $reason,
+        null,
+        false,
+        $common['record_status'] ?: 'PENDING_CHECKER'
+    );
+}
+
+function module_update_record(array $module, array $input, string $reason = ''): void
+{
+    $sourceId = (int)($input['source_id'] ?? 0);
+    if ($sourceId <= 0) {
+        throw new RuntimeException('เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขย source_id เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขย');
+    }
+
+    $source = module_find_latest_by_id($module['key'], $sourceId);
+    if ($source === null) {
+        throw new RuntimeException('เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขย');
+    }
+
+    $payload = validate_and_normalize_payload($module, $input);
+    $common = normalize_common_payload($input, $source);
+
+    module_persist_new_version(
+        $module['key'],
+        $source['record_uid'],
+        ((int)$source['version_no']) + 1,
+        $payload,
+        $common,
+        'UPDATE',
+        $reason,
+        $source,
+        false,
+        $common['record_status'] ?: 'PENDING_CHECKER'
+    );
+}
+
+function module_approve_record(array $module, array $input, string $reason = ''): void
+{
+    if (!in_array(current_role_name(), ['checker', 'executive'], true)) {
+        throw new RuntimeException('เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€”เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธย');
+    }
+
+    $sourceId = (int)($input['source_id'] ?? 0);
+    if ($sourceId <= 0) {
+        throw new RuntimeException('เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขย source_id เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธโ€');
+    }
+
+    $source = module_find_latest_by_id($module['key'], $sourceId);
+    if ($source === null) {
+        throw new RuntimeException('เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขย');
+    }
+    if ((int)$source['is_deleted'] === 1) {
+        throw new RuntimeException('เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธโ€ขเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธย');
+    }
+
+    $payload = json_decode((string)$source['data_json'], true);
+    if (!is_array($payload)) {
+        $payload = [];
+    }
+
+    $common = normalize_common_payload($source, $source);
+    $common['record_status'] = 'APPROVED';
+
+    module_persist_new_version(
+        $module['key'],
+        $source['record_uid'],
+        ((int)$source['version_no']) + 1,
+        $payload,
+        $common,
+        'APPROVE',
+        $reason,
+        $source,
+        false,
+        'APPROVED'
+    );
+}
+
+function module_delete_record(array $module, array $input, string $reason = ''): void
+{
+    $sourceId = (int)($input['source_id'] ?? 0);
+    if ($sourceId <= 0) {
+        throw new RuntimeException('เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขย source_id เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขย');
+    }
+    if ($reason === '') {
+        throw new RuntimeException('เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธย');
+    }
+
+    $source = module_find_latest_by_id($module['key'], $sourceId);
+    if ($source === null) {
+        throw new RuntimeException('เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขย');
+    }
+
+    $payload = json_decode((string)$source['data_json'], true);
+    if (!is_array($payload)) {
+        $payload = [];
+    }
+
+    $common = normalize_common_payload($source, $source);
+    $common['record_status'] = 'DELETED';
+
+    module_persist_new_version(
+        $module['key'],
+        $source['record_uid'],
+        ((int)$source['version_no']) + 1,
+        $payload,
+        $common,
+        'SOFT_DELETE',
+        $reason,
+        $source,
+        true,
+        'DELETED'
+    );
+}
+
+function module_persist_new_version(
+    string $moduleKey,
+    string $recordUid,
+    int $versionNo,
+    array $payload,
+    array $common,
+    string $action,
+    string $reason,
+    ?array $source,
+    bool $isDeleted,
+    string $statusOverride
+): void {
+    $pdo = db();
+    $module = module_by_key($moduleKey);
+    $actor = current_user_name();
+    $role = current_role_name();
+    $ip = request_ip();
+    $device = request_device();
+    $now = now_dt();
+
+    $primaryRef = (string)($payload[$module['primary_ref_field']] ?? ($common['primary_ref'] ?? ''));
+    $primaryName = (string)($payload[$module['primary_name_field']] ?? ($common['primary_name'] ?? ''));
+    $amount = isset($payload[$module['amount_field']]) ? parse_decimal_or_null($payload[$module['amount_field']]) : ($common['amount'] ?? null);
+    $riskLevel = isset($payload[$module['risk_field']]) ? (string)$payload[$module['risk_field']] : ($common['risk_level'] ?? null);
+    $eventDate = isset($payload[$module['event_date_field']]) ? parse_date_or_null((string)$payload[$module['event_date_field']]) : ($common['event_date'] ?? null);
+
+    $beforeJson = $source ? json_encode($source, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+
+    $pdo->beginTransaction();
+    try {
+        $stmtFlag = $pdo->prepare('UPDATE workflow_records SET is_latest = 0 WHERE module_key = :module_key AND record_uid = :record_uid AND is_latest = 1');
+        $stmtFlag->execute([
+            ':module_key' => $moduleKey,
+            ':record_uid' => $recordUid,
+        ]);
+
+        $stmtInsert = $pdo->prepare(
+            'INSERT INTO workflow_records (
+                module_key, record_uid, version_no, is_latest, is_deleted, record_status,
+                primary_name, primary_ref, customer_ref, branch_code, risk_level, amount, event_date,
+                data_json, consent_flag, risk_flags, note_text,
+                created_by, created_role, created_at, created_ip, created_device,
+                updated_by, updated_role, updated_at, updated_ip, updated_device,
+                checker_by, checker_at, deleted_by, deleted_at
+            ) VALUES (
+                :module_key, :record_uid, :version_no, 1, :is_deleted, :record_status,
+                :primary_name, :primary_ref, :customer_ref, :branch_code, :risk_level, :amount, :event_date,
+                :data_json, :consent_flag, :risk_flags, :note_text,
+                :created_by, :created_role, :created_at, :created_ip, :created_device,
+                :updated_by, :updated_role, :updated_at, :updated_ip, :updated_device,
+                :checker_by, :checker_at, :deleted_by, :deleted_at
+            )'
+        );
+
+        $checkerBy = $statusOverride === 'APPROVED' ? $actor : null;
+        $checkerAt = $statusOverride === 'APPROVED' ? $now : null;
+        $deletedBy = $isDeleted ? $actor : null;
+        $deletedAt = $isDeleted ? $now : null;
+
+        $stmtInsert->execute([
+            ':module_key' => $moduleKey,
+            ':record_uid' => $recordUid,
+            ':version_no' => $versionNo,
+            ':is_deleted' => $isDeleted ? 1 : 0,
+            ':record_status' => $statusOverride,
+            ':primary_name' => $primaryName,
+            ':primary_ref' => $primaryRef,
+            ':customer_ref' => (string)($common['customer_ref'] ?? ''),
+            ':branch_code' => (string)($common['branch_code'] ?? ''),
+            ':risk_level' => $riskLevel,
+            ':amount' => $amount,
+            ':event_date' => $eventDate,
+            ':data_json' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ':consent_flag' => (int)($common['consent_flag'] ?? 0),
+            ':risk_flags' => (string)($common['risk_flags'] ?? ''),
+            ':note_text' => (string)($common['note_text'] ?? ''),
+            ':created_by' => $actor,
+            ':created_role' => $role,
+            ':created_at' => $now,
+            ':created_ip' => $ip,
+            ':created_device' => $device,
+            ':updated_by' => $actor,
+            ':updated_role' => $role,
+            ':updated_at' => $now,
+            ':updated_ip' => $ip,
+            ':updated_device' => $device,
+            ':checker_by' => $checkerBy,
+            ':checker_at' => $checkerAt,
+            ':deleted_by' => $deletedBy,
+            ':deleted_at' => $deletedAt,
+        ]);
+
+        $recordId = (int)$pdo->lastInsertId();
+
+        $afterPayload = [
+            'record_id' => $recordId,
+            'module_key' => $moduleKey,
+            'record_uid' => $recordUid,
+            'version_no' => $versionNo,
+            'record_status' => $statusOverride,
+            'payload' => $payload,
+            'common' => $common,
+        ];
+
+        $afterJson = json_encode($afterPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        $stmtLog = $pdo->prepare(
+            'INSERT INTO action_logs (
+                module_key, action_type, record_uid, version_no, reason,
+                before_json, after_json, user_name, role_name, ip_address, device_info, created_at
+            ) VALUES (
+                :module_key, :action_type, :record_uid, :version_no, :reason,
+                :before_json, :after_json, :user_name, :role_name, :ip_address, :device_info, :created_at
+            )'
+        );
+
+        $stmtLog->execute([
+            ':module_key' => $moduleKey,
+            ':action_type' => $action,
+            ':record_uid' => $recordUid,
+            ':version_no' => $versionNo,
+            ':reason' => $reason,
+            ':before_json' => $beforeJson,
+            ':after_json' => $afterJson,
+            ':user_name' => $actor,
+            ':role_name' => $role,
+            ':ip_address' => $ip,
+            ':device_info' => $device,
+            ':created_at' => $now,
+        ]);
+
+        $stmtEvent = $pdo->prepare(
+            'INSERT INTO event_ledger (
+                event_type, module_key, record_uid, version_no, event_payload,
+                actor_name, actor_role, ip_address, device_info, created_at
+            ) VALUES (
+                :event_type, :module_key, :record_uid, :version_no, :event_payload,
+                :actor_name, :actor_role, :ip_address, :device_info, :created_at
+            )'
+        );
+
+        $stmtEvent->execute([
+            ':event_type' => $action,
+            ':module_key' => $moduleKey,
+            ':record_uid' => $recordUid,
+            ':version_no' => $versionNo,
+            ':event_payload' => $afterJson,
+            ':actor_name' => $actor,
+            ':actor_role' => $role,
+            ':ip_address' => $ip,
+            ':device_info' => $device,
+            ':created_at' => $now,
+        ]);
+
+        $stmtNotify = $pdo->prepare(
+            'INSERT INTO notification_logs (
+                module_key, record_uid, level_name, message_text, user_name, created_at
+            ) VALUES (
+                :module_key, :record_uid, :level_name, :message_text, :user_name, :created_at
+            )'
+        );
+
+        $level = $isDeleted ? 'WARNING' : ($statusOverride === 'APPROVED' ? 'SUCCESS' : 'INFO');
+        $message = sprintf('[%s] %s เน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขย %s เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเน€เธย %s', $module['title'], thai_action_label($action), $versionNo, $actor);
+
+        $stmtNotify->execute([
+            ':module_key' => $moduleKey,
+            ':record_uid' => $recordUid,
+            ':level_name' => $level,
+            ':message_text' => $message,
+            ':user_name' => $actor,
+            ':created_at' => $now,
+        ]);
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+}
+
+function validate_and_normalize_payload(array $module, array $input): array
+{
+    $errors = [];
+    $payload = [];
+
+    foreach ($module['fields'] as $field) {
+        $name = $field['name'];
+        $type = $field['type'];
+        $required = (bool)($field['required'] ?? false);
+        $raw = $input[$name] ?? null;
+
+        if ($type === 'number') {
+            $value = parse_decimal_or_null($raw);
+            if ($required && $value === null) {
+                $errors[] = 'เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ฆ: ' . $field['label'];
+            }
+            $payload[$name] = $value;
+            continue;
+        }
+
+        if ($type === 'date') {
+            $value = parse_date_or_null((string)$raw);
+            if ($required && $value === null) {
+                $errors[] = 'เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธโ€ขเน€เธโฌเน€เธยเธขย: ' . $field['label'];
+            }
+            $payload[$name] = $value;
+            continue;
+        }
+
+        $value = trim((string)$raw);
+
+        if ($required && $value === '') {
+            $errors[] = 'เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเนโฌยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเน€เธโ€ฆ: ' . $field['label'];
+        }
+
+        if ($type === 'select' && $value !== '') {
+            $options = $field['options'] ?? [];
+            if (!in_array($value, $options, true)) {
+                $errors[] = 'เน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธโ€เน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธโ€ขเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนยเธเน€เธโฌเน€เธยเน€เธโ€ฆเน€เธโฌเน€เธยเน€เธโ€”เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌโ€เน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเนโฌเธเน€เธโฌเน€เธยเธขยเน€เธโฌเน€เธยเน€เธยเน€เธโฌเน€เธยเธขย: ' . $field['label'];
+            }
+        }
+
+        $payload[$name] = $value;
+    }
+
+    if ($errors !== []) {
+        throw new RuntimeException(implode(' | ', $errors));
+    }
+
+    return $payload;
+}
+
+function normalize_common_payload(array $input, ?array $fallbackRow = null): array
+{
+    $fallbackPayload = [];
+    if ($fallbackRow !== null && isset($fallbackRow['data_json'])) {
+        $decoded = json_decode((string)$fallbackRow['data_json'], true);
+        if (is_array($decoded)) {
+            $fallbackPayload = $decoded;
+        }
+    }
+
+    return [
+        'branch_code' => trim((string)($input['branch_code'] ?? ($fallbackRow['branch_code'] ?? ''))),
+        'customer_ref' => trim((string)($input['customer_ref_common'] ?? ($fallbackRow['customer_ref'] ?? ($fallbackPayload['customer_ref'] ?? '')))),
+        'risk_level' => trim((string)($input['risk_level'] ?? ($fallbackRow['risk_level'] ?? ''))),
+        'amount' => parse_decimal_or_null($input['amount'] ?? ($fallbackRow['amount'] ?? null)),
+        'event_date' => parse_date_or_null((string)($input['event_date'] ?? ($fallbackRow['event_date'] ?? ''))),
+        'consent_flag' => (int)($input['consent_flag'] ?? ($fallbackRow['consent_flag'] ?? 0)),
+        'risk_flags' => trim((string)($input['risk_flags_common'] ?? ($fallbackRow['risk_flags'] ?? ''))),
+        'note_text' => trim((string)($input['note_text'] ?? ($fallbackRow['note_text'] ?? ''))),
+        'record_status' => trim((string)($input['record_status'] ?? ($fallbackRow['record_status'] ?? 'PENDING_CHECKER'))),
+        'primary_ref' => trim((string)($input['primary_ref'] ?? ($fallbackRow['primary_ref'] ?? ''))),
+        'primary_name' => trim((string)($input['primary_name'] ?? ($fallbackRow['primary_name'] ?? ''))),
+    ];
+}
+
+function module_find_latest_by_id(string $moduleKey, int $id): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM workflow_records WHERE id = :id AND module_key = :module_key AND is_latest = 1 LIMIT 1');
+    $stmt->execute([
+        ':id' => $id,
+        ':module_key' => $moduleKey,
+    ]);
+    $row = $stmt->fetch();
+
+    if (!$row) {
+        return null;
+    }
+
+    $decoded = json_decode((string)$row['data_json'], true);
+    $row['payload'] = is_array($decoded) ? $decoded : [];
+    return $row;
+}
+
+function module_list_latest(string $moduleKey, string $searchTerm = ''): array
+{
+    $limit = (int)(app_config()['max_rows_per_module'] ?? 200);
+    $hasSearch = $searchTerm !== '';
+    $sql = 'SELECT * FROM workflow_records WHERE module_key = :module_key AND is_latest = 1';
+
+    if ($hasSearch) {
+        $sql .= ' AND (
+            record_uid LIKE :search1
+            OR primary_ref LIKE :search2
+            OR primary_name LIKE :search3
+            OR customer_ref LIKE :search4
+            OR branch_code LIKE :search5
+            OR risk_flags LIKE :search6
+            OR note_text LIKE :search7
+        )';
+    }
+
+    $sql .= ' ORDER BY id DESC LIMIT :limit';
+
+    $stmt = db()->prepare($sql);
+    $stmt->bindValue(':module_key', $moduleKey, PDO::PARAM_STR);
+    if ($hasSearch) {
+        $searchValue = '%' . $searchTerm . '%';
+        $stmt->bindValue(':search1', $searchValue, PDO::PARAM_STR);
+        $stmt->bindValue(':search2', $searchValue, PDO::PARAM_STR);
+        $stmt->bindValue(':search3', $searchValue, PDO::PARAM_STR);
+        $stmt->bindValue(':search4', $searchValue, PDO::PARAM_STR);
+        $stmt->bindValue(':search5', $searchValue, PDO::PARAM_STR);
+        $stmt->bindValue(':search6', $searchValue, PDO::PARAM_STR);
+        $stmt->bindValue(':search7', $searchValue, PDO::PARAM_STR);
+    }
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $rows = $stmt->fetchAll();
+    foreach ($rows as &$row) {
+        $decoded = json_decode((string)$row['data_json'], true);
+        $row['payload'] = is_array($decoded) ? $decoded : [];
+    }
+
+    return $rows;
+}
+
+function module_summary(string $moduleKey): array
+{
+    $stmt = db()->prepare(
+        'SELECT
+            COUNT(*) AS total_rows,
+            SUM(CASE WHEN is_deleted = 1 THEN 1 ELSE 0 END) AS deleted_rows,
+            SUM(CASE WHEN record_status = "PENDING_CHECKER" THEN 1 ELSE 0 END) AS pending_rows,
+            SUM(CASE WHEN record_status = "APPROVED" THEN 1 ELSE 0 END) AS approved_rows
+         FROM workflow_records
+         WHERE module_key = :module_key AND is_latest = 1'
+    );
+    $stmt->execute([':module_key' => $moduleKey]);
+    $row = $stmt->fetch();
+
+    if (!$row) {
+        return ['total_rows' => 0, 'deleted_rows' => 0, 'pending_rows' => 0, 'approved_rows' => 0];
+    }
+
+    return [
+        'total_rows' => (int)$row['total_rows'],
+        'deleted_rows' => (int)$row['deleted_rows'],
+        'pending_rows' => (int)$row['pending_rows'],
+        'approved_rows' => (int)$row['approved_rows'],
+    ];
+}
+
+function render_module_page(array $context): void
+{
+    $module = $context['module'];
+    $rows = $context['rows'];
+    $summary = $context['summary'];
+    $edit = $context['edit'];
+    $searchTerm = (string)($context['search_term'] ?? '');
+    $payload = $edit['payload'] ?? [];
+    $isEdit = $edit !== null;
+
+    $moduleFields = $module['fields'] ?? [];
+    $fieldColumns = [[], [], []];
+    foreach ($moduleFields as $index => $field) {
+        $fieldColumns[$index % 3][] = $field;
+    }
+
+    $selfPath = basename((string)($_SERVER['PHP_SELF'] ?? ''));
+    $searchSuffix = $searchTerm !== '' ? ('?q=' . rawurlencode($searchTerm)) : '';
+    $editSuffix = $searchTerm !== '' ? ('&q=' . rawurlencode($searchTerm)) : '';
+
+    $renderField = static function (array $field, $value): void {
+        $name = (string)$field['name'];
+        $type = (string)$field['type'];
+        $required = (bool)($field['required'] ?? false);
+        ?>
+        <div class="mb-3">
+            <label class="form-label"><?php echo h((string)$field['label']); ?><?php echo $required ? ' *' : ''; ?></label>
+            <?php if ($type === 'textarea'): ?>
+                <textarea class="form-control" rows="2" name="<?php echo h($name); ?>" <?php echo $required ? 'required' : ''; ?>><?php echo h((string)$value); ?></textarea>
+            <?php elseif ($type === 'select'): ?>
+                <select class="form-select" name="<?php echo h($name); ?>" <?php echo $required ? 'required' : ''; ?>>
+                    <option value="">-- เน€เธโฌเน€เธเธ…เน€เธเธ—เน€เธเธเน€เธย --</option>
+                    <?php foreach (($field['options'] ?? []) as $option): ?>
+                        <option value="<?php echo h((string)$option); ?>" <?php echo ((string)$value === (string)$option) ? 'selected' : ''; ?>><?php echo h(thai_option_label((string)$option)); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            <?php else: ?>
+                <input class="form-control"
+                    type="<?php echo h($type === 'number' ? 'number' : ($type === 'date' ? 'date' : 'text')); ?>"
+                    name="<?php echo h($name); ?>"
+                    value="<?php echo h((string)$value); ?>"
+                    <?php echo $required ? 'required' : ''; ?>
+                    <?php echo $type === 'number' ? 'step="0.01"' : ''; ?>>
+            <?php endif; ?>
+        </div>
+        <?php
+    };
+    ?>
+    <section class="mb-4">
+        <div class="card shadow-sm border-0 module-hero">
+            <div class="card-body">
+                <h2 class="h5 mb-1"><?php echo h($module['title']); ?></h2>
+                <p class="text-muted mb-0"><?php echo h($module['description']); ?></p>
+            </div>
+        </div>
+    </section>
+
+    <section class="card shadow-sm border-0 mb-4 module-toolbar">
+        <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-brand" type="button" data-bs-toggle="modal" data-bs-target="#entryModal">+ เน€เธเธดเนเธก</button>
+                <?php if ($isEdit): ?>
+                    <span class="badge text-bg-primary">เน€เธยเน€เธเธ“เน€เธเธ…เน€เธเธ‘เน€เธยเน€เธยเน€เธยเน€เธยเน€เธยเน€เธย ID <?php echo (int)$edit['id']; ?></span>
+                <?php endif; ?>
+            </div>
+            <form method="get" class="module-search d-flex align-items-center gap-2">
+                <input class="form-control" name="q" value="<?php echo h($searchTerm); ?>" placeholder="เน€เธยเน€เธยเน€เธยเน€เธเธเน€เธเธ’เน€เธเธเน€เธเธเน€เธเธ‘เน€เธเธ, เน€เธยเน€เธเธ—เน€เธยเน€เธเธ, เน€เธเธเน€เธยเน€เธเธ’เน€เธยเน€เธเธเน€เธเธ”เน€เธย, เน€เธเธเน€เธเธ’เน€เธยเน€เธเธ’">
+                <button class="btn btn-outline-primary" type="submit">เน€เธยเน€เธยเน€เธยเน€เธเธเน€เธเธ’</button>
+                <?php if ($searchTerm !== ''): ?>
+                    <a class="btn btn-outline-secondary" href="<?php echo h($selfPath); ?>">เน€เธเธ…เน€เธยเน€เธเธ’เน€เธย</a>
+                <?php endif; ?>
+            </form>
+            <div class="small text-muted">เน€เธยเน€เธย <?php echo number_format(count($rows)); ?> เน€เธเธเน€เธเธ’เน€เธเธเน€เธยเน€เธเธ’เน€เธเธ</div>
+        </div>
+    </section>
+
+    <section class="row g-3 mb-4">
+        <div class="col-md-3"><div class="stat-card"><span>เน€เธโ€”เน€เธเธ‘เน€เธยเน€เธยเน€เธเธเน€เธเธเน€เธโ€</span><strong><?php echo (int)$summary['total_rows']; ?></strong></div></div>
+        <div class="col-md-3"><div class="stat-card"><span>เน€เธเธเน€เธเธเน€เธโ€ขเน€เธเธเน€เธเธเน€เธยเน€เธเธเน€เธเธเน€เธย</span><strong><?php echo (int)$summary['pending_rows']; ?></strong></div></div>
+        <div class="col-md-3"><div class="stat-card"><span>เน€เธเธเน€เธยเน€เธเธเน€เธเธเน€เธเธ‘เน€เธโ€ขเน€เธเธ”เน€เธยเน€เธเธ…เน€เธยเน€เธเธ</span><strong><?php echo (int)$summary['approved_rows']; ?></strong></div></div>
+        <div class="col-md-3"><div class="stat-card"><span>เน€เธเธ…เน€เธยเน€เธยเน€เธยเน€เธยเน€เธโ€ขเน€เธเธเน€เธเธเน€เธยเน€เธเธ</span><strong><?php echo (int)$summary['deleted_rows']; ?></strong></div></div>
+    </section>
+
+    <section class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <h3 class="h6 mb-0">เน€เธยเน€เธเธ…เน€เธเธ…เน€เธเธ‘เน€เธยเน€เธยเน€เธยเน€เธเธเน€เธเธ’เน€เธเธเน€เธยเน€เธเธ’เน€เธเธเน€เธเธ…เน€เธยเน€เธเธ’เน€เธเธเน€เธเธเน€เธโ€ (เน€เธยเน€เธยเน€เธยเน€เธยเน€เธย/เน€เธเธ…เน€เธยเน€เธยเน€เธโ€เน€เธยเน€เธโ€”เน€เธเธ‘เน€เธยเน€เธโ€”เน€เธเธ•)</h3>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>เน€เธเธเน€เธเธเน€เธเธ‘เน€เธเธเน€เธเธเน€เธเธ’เน€เธเธเน€เธยเน€เธเธ’เน€เธเธ</th>
+                        <th>เน€เธเธเน€เธยเน€เธเธ’เน€เธยเน€เธเธเน€เธเธ”เน€เธยเน€เธเธเน€เธเธ…เน€เธเธ‘เน€เธย</th>
+                        <th>เน€เธยเน€เธเธ—เน€เธยเน€เธเธเน€เธเธเน€เธเธ…เน€เธเธ‘เน€เธย</th>
+                        <th>เน€เธเธเน€เธโ€“เน€เธเธ’เน€เธยเน€เธเธ</th>
+                        <th>เน€เธโฌเน€เธเธเน€เธเธเน€เธเธเน€เธยเน€เธยเน€เธเธ‘เน€เธย</th>
+                        <th>เน€เธเธเน€เธเธ‘เน€เธยเน€เธโฌเน€เธโ€เน€เธโ€ขเน€เธเธ…เน€เธยเน€เธเธ’เน€เธเธเน€เธเธเน€เธโ€</th>
+                        <th>เน€เธยเน€เธเธเน€เธยเน€เธยเน€เธยเน€เธยเน€เธยเน€เธยเน€เธเธ…เน€เธยเน€เธเธ’เน€เธเธเน€เธเธเน€เธโ€</th>
+                        <th>เน€เธยเน€เธยเน€เธเธเน€เธเธเน€เธเธเน€เธเธ…เน€เธเธเน€เธยเน€เธเธ</th>
+                        <th>เน€เธยเน€เธเธ’เน€เธเธเน€เธยเน€เธเธ‘เน€เธโ€เน€เธยเน€เธเธ’เน€เธเธ</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($rows === []): ?>
+                        <tr><td colspan="10" class="text-center text-muted py-4">เน€เธยเน€เธเธเน€เธยเน€เธยเน€เธยเน€เธยเน€เธยเน€เธเธเน€เธเธเน€เธเธเน€เธเธ…เน€เธโ€ขเน€เธเธ’เน€เธเธเน€เธโฌเน€เธยเน€เธเธ—เน€เธยเน€เธเธเน€เธยเน€เธยเน€เธยเน€เธยเน€เธยเน€เธยเน€เธเธเน€เธเธ’</td></tr>
+                    <?php endif; ?>
+                    <?php foreach ($rows as $row):
+                        $status = (string)$row['record_status'];
+                    ?>
+                        <tr class="<?php echo ((int)$row['is_deleted'] === 1) ? 'table-danger' : ''; ?>">
+                            <td><?php echo (int)$row['id']; ?></td>
+                            <td><code><?php echo h((string)$row['record_uid']); ?></code></td>
+                            <td><?php echo h((string)$row['primary_ref']); ?></td>
+                            <td><?php echo h((string)$row['primary_name']); ?></td>
+                            <td><span class="badge text-bg-<?php echo h(badge_class_for_status($status)); ?>"><?php echo h(thai_status_label($status)); ?></span></td>
+                            <td><?php echo (int)$row['version_no']; ?></td>
+                            <td><?php echo h((string)$row['updated_at']); ?></td>
+                            <td><?php echo h((string)$row['updated_by']); ?><br><small class="text-muted"><?php echo h(thai_role_label((string)$row['updated_role'])); ?></small></td>
+                            <td>
+                                <?php $preview = array_slice($row['payload'], 0, 3, true); ?>
+                                <?php foreach ($preview as $k => $v): ?>
+                                    <small class="d-block"><?php echo h((string)$k); ?>: <?php echo h((string)$v); ?></small>
+                                <?php endforeach; ?>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <a class="btn btn-sm btn-outline-primary" href="?edit=<?php echo (int)$row['id']; ?><?php echo h($editSuffix); ?>">เน€เธยเน€เธยเน€เธยเน€เธยเน€เธย</a>
+                                    <?php if ($status !== 'APPROVED' && (int)$row['is_deleted'] === 0): ?>
+                                        <form method="post">
+                                            <?php echo csrf_input(); ?>
+                                            <input type="hidden" name="module_key" value="<?php echo h($module['key']); ?>">
+                                            <input type="hidden" name="action" value="approve">
+                                            <input type="hidden" name="source_id" value="<?php echo (int)$row['id']; ?>">
+                                            <input type="hidden" name="reason" value="เน€เธเธเน€เธยเน€เธเธเน€เธเธเน€เธเธ‘เน€เธโ€ขเน€เธเธ”เน€เธยเน€เธโ€เน€เธเธเน€เธยเน€เธเธเน€เธยเน€เธโ€ขเน€เธเธเน€เธเธเน€เธยเน€เธเธเน€เธเธเน€เธย">
+                                            <button class="btn btn-sm btn-outline-success" type="submit">เน€เธเธเน€เธยเน€เธเธเน€เธเธเน€เธเธ‘เน€เธโ€ขเน€เธเธ”</button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <?php if ((int)$row['is_deleted'] === 0): ?>
+                                        <form method="post" class="needs-confirm-delete">
+                                            <?php echo csrf_input(); ?>
+                                            <input type="hidden" name="module_key" value="<?php echo h($module['key']); ?>">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="source_id" value="<?php echo (int)$row['id']; ?>">
+                                            <input type="hidden" name="reason" value="เน€เธเธ…เน€เธยเน€เธยเน€เธยเน€เธยเน€เธโ€ขเน€เธเธเน€เธเธเน€เธยเน€เธเธเน€เธยเน€เธโ€เน€เธเธเน€เธยเน€เธเธเน€เธยเน€เธยเน€เธยเน€เธยเน€เธยเน€เธเธ’เน€เธย">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">เน€เธเธ…เน€เธย</button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal fade" id="entryModal" tabindex="-1" aria-labelledby="entryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-xl">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h3 class="h6 mb-0" id="entryModalLabel"><?php echo $isEdit ? 'แก้ไขรายการ (สร้างเวอร์ชันใหม่)' : 'เพิ่มรายการใหม่'; ?></h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">หน้ากรอกข้อมูลแบบ 3 บล็อก ซ้ายไปขวา</p>
+                <form method="post" class="validate-form" novalidate>
+                    <?php echo csrf_input(); ?>
+                    <input type="hidden" name="module_key" value="<?php echo h($module['key']); ?>">
+                    <input type="hidden" name="action" value="<?php echo $isEdit ? 'update' : 'create'; ?>">
+                    <?php if ($isEdit): ?>
+                        <input type="hidden" name="source_id" value="<?php echo (int)$edit['id']; ?>">
+                    <?php endif; ?>
+
+                    <div class="row g-3">
+                        <div class="col-lg-4">
+                            <div class="entry-block h-100">
+                                <div class="entry-block-title">บล็อก 1</div>
+                                <?php foreach ($fieldColumns[0] as $field): ?>
+                                    <?php $renderField($field, $payload[(string)$field['name']] ?? ''); ?>
+                                <?php endforeach; ?>
+                                <div class="mb-3">
+                                    <label class="form-label">รหัสสาขา</label>
+                                    <input class="form-control" name="branch_code" value="<?php echo h((string)($edit['branch_code'] ?? '')); ?>">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">อ้างอิงลูกค้า (ส่วนกลาง)</label>
+                                    <input class="form-control" name="customer_ref_common" value="<?php echo h((string)($edit['customer_ref'] ?? '')); ?>">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="entry-block h-100">
+                                <div class="entry-block-title">บล็อก 2</div>
+                                <?php foreach ($fieldColumns[1] as $field): ?>
+                                    <?php $renderField($field, $payload[(string)$field['name']] ?? ''); ?>
+                                <?php endforeach; ?>
+                                <div class="mb-3">
+                                    <label class="form-label">ระดับความเสี่ยง (ส่วนกลาง)</label>
+                                    <input class="form-control" name="risk_level" value="<?php echo h((string)($edit['risk_level'] ?? '')); ?>">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">จำนวนเงิน (ส่วนกลาง)</label>
+                                    <input class="form-control" name="amount" type="number" step="0.01" value="<?php echo h((string)($edit['amount'] ?? '')); ?>">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">วันที่เกิดรายการ (ส่วนกลาง)</label>
+                                    <input class="form-control" name="event_date" type="date" value="<?php echo h((string)($edit['event_date'] ?? '')); ?>">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="entry-block h-100">
+                                <div class="entry-block-title">บล็อก 3</div>
+                                <?php foreach ($fieldColumns[2] as $field): ?>
+                                    <?php $renderField($field, $payload[(string)$field['name']] ?? ''); ?>
+                                <?php endforeach; ?>
+                                <div class="mb-3">
+                                    <label class="form-label">ธงความยินยอม</label>
+                                    <select class="form-select" name="consent_flag">
+                                        <option value="0" <?php echo ((string)($edit['consent_flag'] ?? '0') === '0') ? 'selected' : ''; ?>>0 - ไม่ยินยอม</option>
+                                        <option value="1" <?php echo ((string)($edit['consent_flag'] ?? '0') === '1') ? 'selected' : ''; ?>>1 - ยินยอม</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">ธงความเสี่ยง (ส่วนกลาง)</label>
+                                    <input class="form-control" name="risk_flags_common" value="<?php echo h((string)($edit['risk_flags'] ?? '')); ?>">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">สถานะรายการ</label>
+                                    <select class="form-select" name="record_status" required>
+                                        <?php $statusValue = (string)($edit['record_status'] ?? 'PENDING_CHECKER'); ?>
+                                        <?php foreach (['DRAFT', 'PENDING_CHECKER', 'APPROVED', 'REJECTED'] as $status): ?>
+                                            <option value="<?php echo h($status); ?>" <?php echo $statusValue === $status ? 'selected' : ''; ?>><?php echo h(thai_status_label($status)); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">เหตุผล / หมายเหตุการบันทึก</label>
+                                    <textarea class="form-control" name="reason" rows="3" placeholder="เหตุผลสำหรับ audit trail"><?php echo h((string)($edit['note_text'] ?? '')); ?></textarea>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-brand" type="submit"><?php echo $isEdit ? 'บันทึกเวอร์ชันใหม่' : 'บันทึกรายการ'; ?></button>
+                                    <?php if ($isEdit): ?>
+                                        <a class="btn btn-outline-secondary" href="<?php echo h($selfPath . $searchSuffix); ?>">ยกเลิกแก้ไข</a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php if ($isEdit): ?>
+    <script>
+        window.nanfinanceOpenEntryModal = true;
+    </script>
+<?php endif; ?>
+<?php
+}

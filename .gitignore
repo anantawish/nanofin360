@@ -1,0 +1,50 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Environment and local overrides
+.env
+.env.*
+!.env.example
+config.local.php
+webconfig.local.php
+
+# Dependencies (optional: ignore vendor for lighter repo)
+# Uncomment if you prefer installing with composer install instead of committing vendor
+# vendor/
+composer.phar
+
+# Credentials / secrets
+keys/*.json
+statment-ocr/keys/*.json
+statment-ocr/gen-lang-client-*.json
+*service-account*.json
+*.pem
+*.p12
+*.pfx
+*.key
+
+# Runtime / uploaded data
+nanofin_users.sqlite
+assets/uploads/*
+!assets/uploads/.gitkeep
+fresher/uploads/*
+!fresher/uploads/.gitkeep
+statment-ocr/uploads/*
+!statment-ocr/uploads/.gitkeep
+
+# Deploy artifacts
+_deploy/*
+!_deploy/deploy_sync.php
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.bak*
+*.decode_bak*
+*.mojibake_fix_bak*
+*.encoding_pre_fix*
+*.tmpbak*
+_tmp_*

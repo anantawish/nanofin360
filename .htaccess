@@ -1,0 +1,23 @@
+Options -Indexes
+
+<IfModule mod_authz_core.c>
+    <FilesMatch "(?i)^(?:config\.php|webconfig\.php|utf8_guard\.php|build_forupload_obfuscate\.php|README\.md)$">
+        Require all denied
+    </FilesMatch>
+
+    <FilesMatch "(?i)(?:encoding_bak|pre_fix_backup|tmpbak|\.bak(?:[._-]|$)|\.sql(?:\.[^.]+)?$|\.log(?:\.[^.]+)?$|\.tar(?:\.[^.]+)?$|\.zip$|\.gz$)">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    <FilesMatch "(?i)^(?:config\.php|webconfig\.php|utf8_guard\.php|build_forupload_obfuscate\.php|README\.md)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    <FilesMatch "(?i)(?:encoding_bak|pre_fix_backup|tmpbak|\.bak(?:[._-]|$)|\.sql(?:\.[^.]+)?$|\.log(?:\.[^.]+)?$|\.tar(?:\.[^.]+)?$|\.zip$|\.gz$)">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>

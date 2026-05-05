@@ -1,0 +1,512 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/bootstrap.php';
+
+$customerDocumentUploads = [
+    'doc_id_card' => ['column' => 'doc_id_card_path', 'sub_dir' => 'docs/id_card', 'label' => 'เอกสารบัตรประชาชน'],
+    'doc_house_reg' => ['column' => 'doc_house_reg_path', 'sub_dir' => 'docs/house_reg', 'label' => 'เอกสารทะเบียนบ้าน'],
+    'doc_vehicle_ownership' => ['column' => 'doc_vehicle_ownership_path', 'sub_dir' => 'docs/vehicle_ownership', 'label' => 'เอกสารครอบครองรถยนต์'],
+    'doc_land_ownership' => ['column' => 'doc_land_ownership_path', 'sub_dir' => 'docs/land_ownership', 'label' => 'เอกสารครอบครองที่ดิน'],
+];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        verify_csrf_or_fail((string)($_POST['csrf_token'] ?? ''));
+        $action = trim((string)($_POST['action'] ?? 'save'));
+        $actor = current_user_name();
+        $now = now_dt();
+
+        if ($action === 'delete') {
+            $id = fresher_int($_POST['id'] ?? 0);
+            if ($id <= 0) {
+                throw new RuntimeException('ไม่พบรายการลูกค้าที่ต้องการลบ');
+            }
+
+            $scope = fresher_scope_clause('branch_code', 'fr_cus_del');
+            $stmtFind = db()->prepare(
+                'SELECT branch_code
+                 FROM fresher_customers
+                 WHERE id = :id AND is_deleted = 0' . $scope['sql'] . '
+                 LIMIT 1'
+            );
+            $params = $scope['params'];
+            $params[':id'] = $id;
+            $stmtFind->execute($params);
+            $row = $stmtFind->fetch();
+            if (!$row) {
+                throw new RuntimeException('ไม่พบข้อมูลลูกค้าหรือไม่มีสิทธิ์ลบ');
+            }
+            assert_branch_in_current_scope((string)$row['branch_code']);
+
+            $stmtDel = db()->prepare(
+                'UPDATE fresher_customers
+                 SET is_deleted = 1,
+                     deleted_by = :deleted_by,
+                     deleted_at = :deleted_at,
+                     updated_by = :updated_by,
+                     updated_at = :updated_at
+                 WHERE id = :id'
+            );
+            $stmtDel->execute([
+                ':deleted_by' => $actor,
+                ':deleted_at' => $now,
+                ':updated_by' => $actor,
+                ':updated_at' => $now,
+                ':id' => $id,
+            ]);
+            add_flash('warning', 'ลบข้อมูลลูกค้าแบบ soft delete เรียบร้อย');
+        } else {
+            $id = fresher_int($_POST['id'] ?? 0);
+            $firstName = trim((string)($_POST['first_name'] ?? ''));
+            $lastName = trim((string)($_POST['last_name'] ?? ''));
+            $phone = trim((string)($_POST['phone_number'] ?? ''));
+            $cid = trim((string)($_POST['cid_tax_id'] ?? ''));
+            $address = trim((string)($_POST['address_line'] ?? ''));
+            $subdistrict = trim((string)($_POST['subdistrict'] ?? ''));
+            $district = trim((string)($_POST['district'] ?? ''));
+            $province = trim((string)($_POST['province'] ?? ''));
+            $occupation = trim((string)($_POST['occupation'] ?? ''));
+            $monthlyIncome = max(0, fresher_decimal($_POST['monthly_income'] ?? 0));
+            $dependents = max(0, fresher_int($_POST['family_dependents'] ?? 0));
+            $attitudeScore = max(0, min(100, fresher_decimal($_POST['attitude_score'] ?? 0)));
+            $branchCode = strtoupper(trim((string)($_POST['branch_code'] ?? '')));
+            $note = trim((string)($_POST['note_text'] ?? ''));
+            $status = strtoupper(trim((string)($_POST['customer_status'] ?? 'ACTIVE')));
+            if ($status === '') {
+                $status = 'ACTIVE';
+            }
+
+            if ($firstName === '' || $lastName === '' || $branchCode === '') {
+                throw new RuntimeException('กรุณากรอกข้อมูลลูกค้าให้ครบ (ชื่อ/นามสกุล/สาขา)');
+            }
+            assert_branch_in_current_scope($branchCode);
+
+            $photo = fresher_upload_file('customer_photo', 'images', ['jpg', 'jpeg', 'png', 'webp'], 8 * 1024 * 1024);
+            $documentUploads = [];
+            foreach ($customerDocumentUploads as $uploadField => $config) {
+                $column = (string)$config['column'];
+                $documentUploads[$column] = fresher_upload_file((string)$uploadField, (string)$config['sub_dir'], ['pdf', 'jpg', 'jpeg', 'png', 'webp'], 12 * 1024 * 1024);
+            }
+
+            $photoPath = '';
+            $documentPaths = [];
+
+            if ($id > 0) {
+                $scope = fresher_scope_clause('branch_code', 'fr_cus_up');
+                $stmtFind = db()->prepare(
+                    'SELECT customer_code, customer_photo_path,
+                            doc_id_card_path, doc_house_reg_path, doc_vehicle_ownership_path, doc_land_ownership_path,
+                            branch_code
+                     FROM fresher_customers
+                     WHERE id = :id AND is_deleted = 0' . $scope['sql'] . '
+                     LIMIT 1'
+                );
+                $params = $scope['params'];
+                $params[':id'] = $id;
+                $stmtFind->execute($params);
+                $existing = $stmtFind->fetch();
+                if (!$existing) {
+                    throw new RuntimeException('ไม่พบลูกค้าที่ต้องการแก้ไข');
+                }
+                assert_branch_in_current_scope((string)$existing['branch_code']);
+
+                $photoPath = (string)($existing['customer_photo_path'] ?? '');
+                if (is_array($photo)) {
+                    $photoPath = (string)$photo['file_path'];
+                }
+                foreach ($customerDocumentUploads as $config) {
+                    $column = (string)$config['column'];
+                    $documentPaths[$column] = (string)($existing[$column] ?? '');
+                    if (is_array($documentUploads[$column] ?? null)) {
+                        $documentPaths[$column] = (string)$documentUploads[$column]['file_path'];
+                    }
+                }
+
+                $stmt = db()->prepare(
+                    'UPDATE fresher_customers
+                     SET first_name = :first_name,
+                         last_name = :last_name,
+                         phone_number = :phone_number,
+                         cid_tax_id = :cid_tax_id,
+                         address_line = :address_line,
+                         subdistrict = :subdistrict,
+                         district = :district,
+                         province = :province,
+                         occupation = :occupation,
+                         monthly_income = :monthly_income,
+                         family_dependents = :family_dependents,
+                         attitude_score = :attitude_score,
+                         branch_code = :branch_code,
+                         customer_photo_path = :customer_photo_path,
+                         doc_id_card_path = :doc_id_card_path,
+                         doc_house_reg_path = :doc_house_reg_path,
+                         doc_vehicle_ownership_path = :doc_vehicle_ownership_path,
+                         doc_land_ownership_path = :doc_land_ownership_path,
+                         note_text = :note_text,
+                         customer_status = :customer_status,
+                         updated_by = :updated_by,
+                         updated_at = :updated_at
+                     WHERE id = :id'
+                );
+                $stmt->execute([
+                    ':first_name' => $firstName,
+                    ':last_name' => $lastName,
+                    ':phone_number' => $phone,
+                    ':cid_tax_id' => $cid,
+                    ':address_line' => $address,
+                    ':subdistrict' => $subdistrict,
+                    ':district' => $district,
+                    ':province' => $province,
+                    ':occupation' => $occupation,
+                    ':monthly_income' => $monthlyIncome,
+                    ':family_dependents' => $dependents,
+                    ':attitude_score' => $attitudeScore,
+                    ':branch_code' => $branchCode,
+                    ':customer_photo_path' => $photoPath,
+                    ':doc_id_card_path' => $documentPaths['doc_id_card_path'] ?? '',
+                    ':doc_house_reg_path' => $documentPaths['doc_house_reg_path'] ?? '',
+                    ':doc_vehicle_ownership_path' => $documentPaths['doc_vehicle_ownership_path'] ?? '',
+                    ':doc_land_ownership_path' => $documentPaths['doc_land_ownership_path'] ?? '',
+                    ':note_text' => $note,
+                    ':customer_status' => $status,
+                    ':updated_by' => $actor,
+                    ':updated_at' => $now,
+                    ':id' => $id,
+                ]);
+                add_flash('success', 'แก้ไขข้อมูลลูกค้าเรียบร้อย');
+            } else {
+                if (is_array($photo)) {
+                    $photoPath = (string)$photo['file_path'];
+                }
+                foreach ($customerDocumentUploads as $config) {
+                    $column = (string)$config['column'];
+                    $documentPaths[$column] = '';
+                    if (is_array($documentUploads[$column] ?? null)) {
+                        $documentPaths[$column] = (string)$documentUploads[$column]['file_path'];
+                    }
+                }
+
+                $customerCode = fresher_generate_code('FRCUS');
+                $stmt = db()->prepare(
+                    'INSERT INTO fresher_customers (
+                        customer_code, first_name, last_name, phone_number, cid_tax_id,
+                        address_line, subdistrict, district, province, occupation,
+                        monthly_income, family_dependents, attitude_score, branch_code,
+                        customer_photo_path, doc_id_card_path, doc_house_reg_path, doc_vehicle_ownership_path, doc_land_ownership_path,
+                        note_text, customer_status,
+                        is_deleted, created_by, created_at
+                     ) VALUES (
+                        :customer_code, :first_name, :last_name, :phone_number, :cid_tax_id,
+                        :address_line, :subdistrict, :district, :province, :occupation,
+                        :monthly_income, :family_dependents, :attitude_score, :branch_code,
+                        :customer_photo_path, :doc_id_card_path, :doc_house_reg_path, :doc_vehicle_ownership_path, :doc_land_ownership_path,
+                        :note_text, :customer_status,
+                        0, :created_by, :created_at
+                     )'
+                );
+                $stmt->execute([
+                    ':customer_code' => $customerCode,
+                    ':first_name' => $firstName,
+                    ':last_name' => $lastName,
+                    ':phone_number' => $phone,
+                    ':cid_tax_id' => $cid,
+                    ':address_line' => $address,
+                    ':subdistrict' => $subdistrict,
+                    ':district' => $district,
+                    ':province' => $province,
+                    ':occupation' => $occupation,
+                    ':monthly_income' => $monthlyIncome,
+                    ':family_dependents' => $dependents,
+                    ':attitude_score' => $attitudeScore,
+                    ':branch_code' => $branchCode,
+                    ':customer_photo_path' => $photoPath,
+                    ':doc_id_card_path' => $documentPaths['doc_id_card_path'] ?? '',
+                    ':doc_house_reg_path' => $documentPaths['doc_house_reg_path'] ?? '',
+                    ':doc_vehicle_ownership_path' => $documentPaths['doc_vehicle_ownership_path'] ?? '',
+                    ':doc_land_ownership_path' => $documentPaths['doc_land_ownership_path'] ?? '',
+                    ':note_text' => $note,
+                    ':customer_status' => $status,
+                    ':created_by' => $actor,
+                    ':created_at' => $now,
+                ]);
+                add_flash('success', 'เพิ่มลูกค้าเรียบร้อย รหัสลูกค้า: ' . $customerCode);
+            }
+        }
+    } catch (Throwable $e) {
+        add_flash('danger', 'บันทึกข้อมูลลูกค้าไม่สำเร็จ: ' . $e->getMessage());
+    }
+
+    redirect_to(fresher_base_url('customers.php'));
+}
+
+$currentFresherPage = 'customers';
+$pageTitle = 'ข้อมูลลูกค้าเช่าซื้อ';
+
+$branchOptions = fresher_branch_options();
+$occupationOptions = fresher_occupation_options();
+$search = trim((string)($_GET['q'] ?? ''));
+
+$scope = fresher_scope_clause('c.branch_code', 'fr_cus_list');
+$sql = 'SELECT c.*,
+               COALESCE((
+                   SELECT GROUP_CONCAT(DISTINCT hp.contract_code ORDER BY hp.id DESC SEPARATOR ", ")
+                   FROM fresher_hire_purchase hp
+                   WHERE hp.customer_code = c.customer_code
+                     AND hp.is_deleted = 0
+               ), "") AS contract_codes
+        FROM fresher_customers c
+        WHERE c.is_deleted = 0' . $scope['sql'];
+$params = $scope['params'];
+if ($search !== '') {
+    $sql .= ' AND (
+        c.customer_code LIKE :q OR
+        c.first_name LIKE :q OR
+        c.last_name LIKE :q OR
+        CONCAT(c.first_name, " ", c.last_name) LIKE :q OR
+        c.cid_tax_id LIKE :q OR
+        EXISTS (
+            SELECT 1
+            FROM fresher_hire_purchase hp_search
+            WHERE hp_search.customer_code = c.customer_code
+              AND hp_search.is_deleted = 0
+              AND hp_search.contract_code LIKE :q
+        )
+    )';
+    $params[':q'] = '%' . $search . '%';
+}
+$sql .= ' ORDER BY c.id DESC';
+$stmtRows = db()->prepare($sql);
+$stmtRows->execute($params);
+$rows = $stmtRows->fetchAll();
+
+$searchScope = fresher_scope_clause('c.branch_code', 'fr_cus_search_opt');
+$stmtSearchOptions = db()->prepare(
+    'SELECT c.customer_code, c.first_name, c.last_name, c.cid_tax_id,
+            COALESCE((
+                SELECT GROUP_CONCAT(DISTINCT hp.contract_code ORDER BY hp.id DESC SEPARATOR ", ")
+                FROM fresher_hire_purchase hp
+                WHERE hp.customer_code = c.customer_code
+                  AND hp.is_deleted = 0
+            ), "") AS contract_codes
+     FROM fresher_customers c
+     WHERE c.is_deleted = 0' . $searchScope['sql'] . '
+     ORDER BY c.id DESC
+     LIMIT 5000'
+);
+$stmtSearchOptions->execute($searchScope['params']);
+$searchOptions = $stmtSearchOptions->fetchAll();
+
+include __DIR__ . '/partials/head.php';
+?>
+<section class="card fr-card mb-4">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3 fr-actions">
+                <button class="btn btn-primary" type="button" id="btnAddCustomer" data-bs-toggle="modal" data-bs-target="#customerFormModal">+ เพิ่มลูกค้า</button>
+            </div>
+            <div class="col-md-9">
+                <form method="get" class="row g-2 align-items-end">
+                    <div class="col-md-9">
+                        <label class="form-label">ค้นหา (สัญญา / ชื่อ-นามสกุล / เลขบัตรประชาชน)</label>
+                        <select class="form-select js-customer-autocomplete" name="q" id="customerSearchSelect">
+                            <option value="">-- พิมพ์ค้นหา --</option>
+                            <?php foreach ($searchOptions as $option): ?>
+                                <?php
+                                    $fullName = trim((string)$option['first_name'] . ' ' . (string)$option['last_name']);
+                                    $contractCodes = trim((string)($option['contract_codes'] ?? ''));
+                                    $label = ($contractCodes !== '' ? $contractCodes : '-')
+                                        . ' | ' . $fullName
+                                        . ' | บัตร: ' . (string)($option['cid_tax_id'] ?: '-')
+                                        . ' | ลูกค้า: ' . (string)$option['customer_code'];
+                                ?>
+                                <option value="<?php echo h((string)$option['customer_code']); ?>" <?php echo $search === (string)$option['customer_code'] ? 'selected' : ''; ?>><?php echo h($label); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-3 fr-actions">
+                        <button class="btn btn-outline-primary" type="submit">ค้นหา</button>
+                        <?php if ($search !== ''): ?>
+                            <a class="btn btn-outline-secondary" href="<?php echo h(fresher_base_url('customers.php')); ?>">ล้าง</a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="card fr-card mb-4">
+    <div class="card-header bg-white"><strong>รายการลูกค้า</strong></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle js-fresher-datatable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>รหัสลูกค้า</th>
+                    <th>เลขสัญญา</th>
+                    <th>รูป</th>
+                    <th>ชื่อ-นามสกุล</th>
+                    <th>เลขบัตร</th>
+                    <th>สาขา</th>
+                    <th>อาชีพ</th>
+                    <th>รายได้</th>
+                    <th>สถานะ</th>
+                    <th>การจัดการ</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($rows as $row): ?>
+                    <?php
+                        $payload = [
+                            'id' => (int)$row['id'],
+                            'customer_code' => (string)$row['customer_code'],
+                            'contract_codes' => (string)($row['contract_codes'] ?? ''),
+                            'first_name' => (string)$row['first_name'],
+                            'last_name' => (string)$row['last_name'],
+                            'phone_number' => (string)$row['phone_number'],
+                            'cid_tax_id' => (string)$row['cid_tax_id'],
+                            'address_line' => (string)$row['address_line'],
+                            'subdistrict' => (string)$row['subdistrict'],
+                            'district' => (string)$row['district'],
+                            'province' => (string)$row['province'],
+                            'occupation' => (string)$row['occupation'],
+                            'monthly_income' => (string)$row['monthly_income'],
+                            'family_dependents' => (string)$row['family_dependents'],
+                            'attitude_score' => (string)$row['attitude_score'],
+                            'branch_code' => (string)$row['branch_code'],
+                            'customer_photo_path' => (string)$row['customer_photo_path'],
+                            'doc_id_card_path' => (string)($row['doc_id_card_path'] ?? ''),
+                            'doc_house_reg_path' => (string)($row['doc_house_reg_path'] ?? ''),
+                            'doc_vehicle_ownership_path' => (string)($row['doc_vehicle_ownership_path'] ?? ''),
+                            'doc_land_ownership_path' => (string)($row['doc_land_ownership_path'] ?? ''),
+                            'note_text' => (string)$row['note_text'],
+                            'customer_status' => (string)$row['customer_status'],
+                        ];
+                        $payloadJson = h((string)json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+                    ?>
+                    <tr>
+                        <td><?php echo (int)$row['id']; ?></td>
+                        <td><code><?php echo h((string)$row['customer_code']); ?></code></td>
+                        <td><?php echo h((string)($row['contract_codes'] !== '' ? $row['contract_codes'] : '-')); ?></td>
+                        <td>
+                            <?php if (!empty($row['customer_photo_path'])): ?>
+                                <img class="fr-thumb" src="<?php echo h(fresher_base_url((string)$row['customer_photo_path'])); ?>" alt="photo">
+                            <?php endif; ?>
+                        </td>
+                        <td><?php echo h((string)$row['first_name'] . ' ' . (string)$row['last_name']); ?></td>
+                        <td><?php echo h((string)($row['cid_tax_id'] ?: '-')); ?></td>
+                        <td><?php echo h((string)$row['branch_code']); ?></td>
+                        <td><?php echo h((string)$row['occupation']); ?></td>
+                        <td><?php echo number_format((float)$row['monthly_income'], 2); ?></td>
+                        <td><?php echo h((string)$row['customer_status']); ?></td>
+                        <td class="fr-actions">
+                            <button class="btn btn-sm btn-outline-info js-btn-view" type="button" data-customer="<?php echo $payloadJson; ?>">ดูข้อมูล</button>
+                            <button class="btn btn-sm btn-outline-primary js-btn-edit" type="button" data-customer="<?php echo $payloadJson; ?>">แก้ไข</button>
+                            <form method="post" class="js-confirm-delete" onsubmit="return confirm('ยืนยันลบข้อมูลลูกค้ารายการนี้?');">
+                                <?php echo csrf_input(); ?>
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">ลบ</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="customerFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data" id="customerForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customerFormModalTitle">เพิ่มลูกค้า</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <?php echo csrf_input(); ?>
+                    <input type="hidden" name="action" value="save">
+                    <input type="hidden" name="id" id="customerFormId" value="0">
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">รหัสลูกค้า</label>
+                            <input class="form-control" id="customerFormCode" value="ระบบสร้างอัตโนมัติ" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">ชื่อ *</label>
+                            <input class="form-control" name="first_name" id="customerFirstName" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">นามสกุล *</label>
+                            <input class="form-control" name="last_name" id="customerLastName" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">สาขา *</label>
+                            <select class="form-select" name="branch_code" id="customerBranchCode" required>
+                                <option value="">-- เลือกสาขา --</option>
+                                <?php foreach ($branchOptions as $branch): ?>
+                                    <?php $code = (string)$branch['branch_code']; ?>
+                                    <option value="<?php echo h($code); ?>"><?php echo h($code . ' - ' . (string)$branch['branch_name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3"><label class="form-label">โทรศัพท์</label><input class="form-control" name="phone_number" id="customerPhoneNumber"></div>
+                        <div class="col-md-3"><label class="form-label">เลขบัตรประชาชน/ภาษี</label><input class="form-control" name="cid_tax_id" id="customerCidTaxId"></div>
+                        <div class="col-md-3"><label class="form-label">อาชีพ</label><input class="form-control" name="occupation" id="customerOccupation" list="occupationOptions"></div>
+                        <div class="col-md-3">
+                            <label class="form-label">สถานะลูกค้า</label>
+                            <select class="form-select" name="customer_status" id="customerStatus">
+                                <?php foreach (['ACTIVE', 'WATCH', 'BLOCKED', 'CLOSED'] as $status): ?>
+                                    <option value="<?php echo h($status); ?>"><?php echo h($status); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6"><label class="form-label">ที่อยู่</label><input class="form-control" name="address_line" id="customerAddressLine"></div>
+                        <div class="col-md-2"><label class="form-label">ตำบล</label><input class="form-control" name="subdistrict" id="customerSubdistrict"></div>
+                        <div class="col-md-2"><label class="form-label">อำเภอ</label><input class="form-control" name="district" id="customerDistrict"></div>
+                        <div class="col-md-2"><label class="form-label">จังหวัด</label><input class="form-control" name="province" id="customerProvince"></div>
+
+                        <div class="col-md-2"><label class="form-label">รายได้/เดือน</label><input class="form-control" name="monthly_income" id="customerMonthlyIncome" type="number" step="0.01" value="0"></div>
+                        <div class="col-md-2"><label class="form-label">ผู้พึ่งพิง</label><input class="form-control" name="family_dependents" id="customerDependents" type="number" step="1" value="0"></div>
+                        <div class="col-md-2"><label class="form-label">คะแนนทัศนะคติ</label><input class="form-control" name="attitude_score" id="customerAttitudeScore" type="number" min="0" max="100" step="0.01" value="0"></div>
+                        <div class="col-md-6"><label class="form-label">หมายเหตุ</label><input class="form-control" name="note_text" id="customerNoteText"></div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">รูปภาพลูกค้า</label>
+                            <input class="form-control" type="file" name="customer_photo" accept=".jpg,.jpeg,.png,.webp">
+                            <div class="form-text">รองรับไฟล์รูปภาพเท่านั้น</div>
+                            <div class="small mt-1" id="current_customer_photo"></div>
+                        </div>
+
+                        <?php foreach ($customerDocumentUploads as $uploadField => $config): ?>
+                            <?php $column = (string)$config['column']; ?>
+                            <div class="col-md-4">
+                                <label class="form-label"><?php echo h((string)$config['label']); ?></label>
+                                <input class="form-control" type="file" name="<?php echo h((string)$uploadField); ?>" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                                <div class="form-text">รองรับ PDF/JPG/PNG/WEBP</div>
+                                <div class="small mt-1" id="current_<?php echo h($column); ?>"></div>
+                            </div>
+                        <?php endforeach; ?>
+
+                        <datalist id="occupationOptions">
+                            <?php foreach ($occupationOptions as $occupation): ?>
+                                <option value="<?php echo h($occupation); ?>"></option>
+                            <?php endforeach; ?>
+                        </datalist>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" type="submit" id="customerFormSubmitBtn">บันทึกข้อมูล</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

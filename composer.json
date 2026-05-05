@@ -1,0 +1,16 @@
+{
+    "name": "smartfinance/nanofinance",
+    "description": "Smart Finance 360",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "google/cloud-vision": "^1.10"
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "audit": {
+            "block-insecure": false
+        }
+    }
+}

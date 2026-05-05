@@ -1,0 +1,404 @@
+:root {
+    --bg-page: #f4f6f9;
+    --bg-soft: #eef4ff;
+    --bg-card: #ffffff;
+    --border: #d9e2ef;
+    --text-main: #1f2d3d;
+    --text-soft: #5d6b7d;
+    --brand: #60a5fa;
+    --brand-strong: #3b82f6;
+    --brand-soft: #dbeafe;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(180deg, #f8fbff 0%, var(--bg-page) 60%, #f2f5f8 100%);
+    color: var(--text-main);
+    font-family: "Source Sans 3", sans-serif;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.2rem;
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+    backdrop-filter: blur(8px);
+}
+
+.brand-wrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-link {
+    color: #1e40af;
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    font-family: "Montserrat", sans-serif;
+}
+
+.brand-sub {
+    color: var(--text-soft);
+}
+
+.user-switch {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.layout-wrap {
+    display: flex;
+    min-height: calc(100vh - 104px);
+}
+
+.sidebar {
+    width: 308px;
+    background: #f8fbff;
+    border-right: 1px solid var(--border);
+    padding: 1rem 0.75rem;
+    overflow-y: auto;
+}
+
+.menu-link {
+    display: block;
+    color: #314154;
+    text-decoration: none;
+    padding: 0.58rem 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.2rem;
+    font-size: 0.93rem;
+    line-height: 1.2;
+}
+
+.menu-link-th {
+    display: block;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.menu-link-en {
+    display: block;
+    margin-top: 0.1rem;
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.2;
+}
+
+.menu-link:hover {
+    background: var(--brand-soft);
+    color: #0f3c8a;
+}
+
+.menu-link.active {
+    background: #e6f0ff;
+    color: #1d4ed8;
+    font-weight: 700;
+    border: 1px solid #b7d2ff;
+}
+
+.menu-link.active .menu-link-en {
+    color: #1e40af;
+}
+
+.main-content {
+    flex: 1;
+    padding: 1.2rem;
+}
+
+.module-hero {
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--brand);
+    background: var(--bg-card);
+}
+
+.module-toolbar {
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+}
+
+.module-search .form-control {
+    min-width: 260px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 0.8rem 1rem;
+    box-shadow: 0 2px 8px rgba(28, 44, 64, 0.04);
+    height: 100%;
+}
+
+.stat-card span {
+    display: block;
+    color: var(--text-soft);
+    font-size: 0.85rem;
+}
+
+.stat-card strong {
+    display: block;
+    font-size: 1.55rem;
+    font-family: "Montserrat", sans-serif;
+}
+
+.stat-card-kpi {
+    border-top: 3px solid var(--brand);
+}
+
+.entry-block {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 0.9rem;
+}
+
+.entry-block-title {
+    font-weight: 700;
+    color: #1e3a8a;
+    font-size: 0.95rem;
+    margin-bottom: 0.7rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px dashed #cfe0ff;
+}
+
+.chart-panel {
+    position: relative;
+    min-height: 360px;
+}
+
+.chart-filter-form .form-label {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.35rem;
+}
+
+.btn-brand {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #0f2c59;
+    font-weight: 700;
+}
+
+.btn-brand:hover {
+    background: var(--brand-strong);
+    border-color: var(--brand-strong);
+    color: #ffffff;
+}
+
+.app-footer {
+    background: #f8fbff;
+    color: #4b5f75;
+    border-top: 1px solid var(--border);
+    font-size: 0.86rem;
+    padding: 0.75rem 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+}
+
+.table-light {
+    --bs-table-bg: #f2f7ff;
+}
+
+/* Strong invalid-state visibility across all forms */
+.validate-form .is-invalid,
+.validate-form.was-validated .form-control:invalid,
+.validate-form.was-validated .form-select:invalid,
+.validate-form.was-validated textarea:invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.16rem rgba(220, 53, 69, 0.18) !important;
+    background-image: none !important;
+}
+
+.validate-form .is-valid {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.12rem rgba(25, 135, 84, 0.12);
+}
+
+/* Popup animation: slide down on open */
+.modal.fade .modal-dialog {
+    transform: translate3d(0, -36px, 0);
+    opacity: 0;
+    transition: transform 0.28s ease, opacity 0.28s ease;
+}
+
+.modal.show .modal-dialog {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+}
+
+.modal.modal-slide-down.fade .modal-dialog {
+    transform: translate3d(0, -80px, 0);
+    opacity: 0;
+    transition: transform 0.32s cubic-bezier(.2, .7, .2, 1), opacity 0.32s ease;
+}
+
+.modal.modal-slide-down.show .modal-dialog {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+}
+
+/* Popup default = normal size, and can be resized on desktop */
+.modal .modal-dialog.sf-resizable-modal {
+    width: clamp(820px, 76vw, 1160px);
+    max-width: calc(100vw - 2rem);
+    margin: 1rem auto;
+}
+
+.modal.show .modal-dialog.sf-resizable-modal:not(.modal-fullscreen) {
+    resize: both;
+    overflow: auto;
+    min-width: 640px;
+    min-height: 420px;
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100vh - 1rem);
+}
+
+.modal .modal-dialog.sf-resizable-modal .modal-content {
+    height: 100%;
+    min-height: 420px;
+}
+
+.modal .modal-dialog.sf-resizable-modal .modal-body {
+    overflow: auto;
+}
+
+/* Ensure long create-contract form stays usable on short viewports */
+#createContractModal .modal-dialog.hp-create-contract-dialog {
+    height: calc(100dvh - 1rem);
+    max-height: calc(100vh - 1rem);
+    overflow: hidden;
+    resize: none;
+    min-height: 0;
+}
+
+#createContractModal .modal-dialog.hp-create-contract-dialog .modal-content {
+    height: 100%;
+    max-height: calc(100vh - 1rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+#createContractModal .modal-dialog.hp-create-contract-dialog .modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ocr-progress-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.ocr-progress-overlay.show {
+    display: flex;
+}
+
+.ocr-progress-card {
+    width: min(520px, 94vw);
+    background: #fff;
+    border: 1px solid #dbe3f0;
+    border-radius: 0.85rem;
+    box-shadow: 0 24px 60px rgba(2, 6, 23, 0.26);
+    padding: 1rem 1rem 0.95rem;
+}
+
+.ocr-progress-title {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.2rem;
+}
+
+.ocr-progress-subtitle {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+}
+
+.ocr-progress-note {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 0.55rem;
+}
+
+@media (max-width: 1200px) {
+    .module-search .form-control {
+        min-width: 210px;
+    }
+}
+
+@media (max-width: 992px) {
+    .layout-wrap {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-height: 300px;
+    }
+
+    .user-switch {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .module-search {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .module-search .form-control {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .modal .modal-dialog.sf-resizable-modal,
+    .modal.show .modal-dialog.sf-resizable-modal:not(.modal-fullscreen) {
+        width: calc(100vw - 1rem);
+        max-width: calc(100vw - 1rem);
+        min-width: 0;
+        min-height: 0;
+        max-height: calc(100vh - 1rem);
+        resize: none;
+    }
+
+    .modal .modal-dialog.sf-resizable-modal .modal-content {
+        min-height: 0;
+    }
+
+    #createContractModal .modal-dialog.hp-create-contract-dialog,
+    #createContractModal .modal-dialog.hp-create-contract-dialog .modal-content {
+        height: calc(100dvh - 0.75rem);
+        max-height: calc(100vh - 0.75rem);
+    }
+}
