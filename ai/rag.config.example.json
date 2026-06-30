@@ -1,0 +1,40 @@
+{
+  "project": "nanofin360",
+  "assistant_name": "NanoFin360 Finance AI",
+  "edition": "paid-rag-addon",
+  "demo_safe": true,
+  "provider": {
+    "llm": "configure-at-runtime",
+    "embeddings": "configure-at-runtime",
+    "api_key_env": "AI_PROVIDER_API_KEY"
+  },
+  "retrieval": {
+    "vector_store": "configure-at-runtime",
+    "top_k": 8,
+    "require_citations": true
+  },
+  "sources": [
+    "policies",
+    "sop",
+    "contract_templates",
+    "portfolio_reports",
+    "collection_reports",
+    "read_only_database_views"
+  ],
+  "suggested_database_views": [
+    "ai_customer_summary",
+    "ai_contract_summary",
+    "ai_installment_status",
+    "ai_collection_queue",
+    "ai_branch_portfolio",
+    "ai_npl_risk_summary",
+    "ai_compliance_cases"
+  ],
+  "guardrails": [
+    "do_not_approve_or_reject_loans",
+    "cite_sources",
+    "apply_role_and_branch_filters",
+    "redact_sensitive_customer_fields",
+    "log_ai_usage"
+  ]
+}

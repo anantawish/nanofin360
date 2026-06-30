@@ -5,6 +5,24 @@ Efficient Financial and Business Management System (PHP + MySQL) for multi-branc
 NanoFin360 is a modular finance/leasing platform built with pragmatic PHP + MySQL architecture.
 It is designed for branch operations, maker-checker workflows, and operational reporting.
 
+## Public Edition and Commercial Services
+This public repository is the free/open demonstration layer. It is intended to
+help prospects inspect the product, install a clean baseline, and understand the
+implementation approach before requesting paid customization.
+
+Commercial work should be sold around:
+- installation and production deployment
+- data migration and branch rollout
+- custom finance/leasing workflows
+- maintenance, backup, and monitoring
+- RAG AI assistant for policy, portfolio, collection, and management questions
+
+See:
+- `docs/PUBLIC_EDITION.md`
+- `docs/SERVICE_OFFER.md`
+- `docs/RAG_AI_BLUEPRINT.md`
+- `ai/README.md`
+
 ## Key Modules
 - Customer 360 + KYC
 - Credit Scoring
